@@ -14,14 +14,14 @@ chrome.runtime.onInstalled.addListener(function() {
 
         function(request, sender, sendResponse) {
 
-            chrome.storage.local.get({'pomodoro': 10}, function(result) {
+            chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
                 timer = result.pomodoro
                 focus = timer;
             });
-            chrome.storage.local.get({'short_br': 10}, function(result) {
+            chrome.storage.local.get({'short_br': 5 * 60}, function(result) {
               break_time = result.short_br
             });
-            chrome.storage.local.get({'long_br': 10}, function(result) {
+            chrome.storage.local.get({'long_br': 15 * 60}, function(result) {
               long_break_time = result.long_br  
             });
             chrome.storage.local.get({'pomodoros': 4}, function(result) {
@@ -36,7 +36,7 @@ chrome.runtime.onInstalled.addListener(function() {
                     if (timer < 0) {
                         
                         if(is_break){
-                            // openPage();
+                            openPage();
                             count++;
 
                             if(count == break_time_count ){

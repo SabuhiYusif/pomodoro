@@ -25,7 +25,7 @@ chrome.storage.local.get({'working': false}, function(result) {
 	}
 });
 
-chrome.storage.local.get({'pomodoro': 10}, function(result) {
+chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
 			 
 				timer = result.pomodoro;
 				minutes = parseInt(timer / 60, 10)
