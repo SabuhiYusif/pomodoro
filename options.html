@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+       #container{
+					display:flex;
+					justify-content: center;
+					flex-direction: column;
+					text-align: center;
+          margin: 20px;
+				}
+        #pomodoro, #short_break_time, #long_break_time, #number_of_pomodoros{
+					
+          margin: 5px;
+				}
+      </style>
+    </head>
+    <body>
+      <div id="container">
+        <div id="pomodoro">
+          <label for="pet-select">Select pomodoro time (mins):</label>
+          <select name="pomodoro_name" id="pomodoro_selector"></select>
+        </div>
+        <div id="short_break_time">
+            <label for="pet-select">Short Break time (mins):</label>
+            <select name="pomodoro_name" id="short_break_time_selector"></select>
+        </div>
+        <div id="long_break_time">
+            <label for="pet-select">Long Break time (mins):</label>
+            <select name="pomodoro_name" id="long_break_time_selector"></select>
+        </div>
+        <div id="number_of_pomodoros">
+            <label for="pet-select">Number of pomodoros for long break:</label>
+            <select name="pomodoro_name" id="pomodoros"></select>
+        </div>
+        <div>
+            <button id="change_btn">Change</button>
+
+        </div>
+        
+      </div>
+
+    </body>
+    <script src="options.js"></script>
+  </html>
