@@ -9,6 +9,45 @@ let timer = 60;
 
 let is_timer_on = false;
 
+// var xhr = new XMLHttpRequest();
+// xhr.open("GET", "https://toggl.com/reports/api/v2/weekly?user_agent=yourname@domain.com&workspace_id=012345", false);
+// xhr.setRequestHeader('Authorization', 'Basic XXXXXX');
+// xhr.send();
+// document.write("Status code: " + xhr.status + " ");
+// document.write(xhr.statusText + "</br>");
+
+// dffdc920d5db30eb667568058da1a6c9
+var http = new XMLHttpRequest();
+var url = 'https://www.toggl.com/api/v8/time_entries/start';
+var params = '{"time_entry":{"description":"TEST JS 2","tags":["billed"],"duration":1200,"start":"2019-03-29T02:10:58.000Z","pid":150604542, "created_with":"curl"}}';
+http.open('POST', url, true);
+
+//Send the proper header information along with the request
+let encoded = btoa('dffdc920d5db30eb667568058da1a6c9:api_token')
+http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
+
+http.onreadystatechange = function() {//Call a function when the state changes.
+    if(http.readyState == 4 && http.status == 200) {
+        console.log(http.responseText);
+    }
+}
+http.send(params);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 chrome.storage.local.get({'working': false}, function(result) {
 	if(result.working){
 		disableStartBtn();

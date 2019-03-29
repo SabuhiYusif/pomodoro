@@ -3,7 +3,7 @@
   "version": "1.0",
   "description": "Build an Extension!",
   "options_page": "options.html",
-  "permissions": ["activeTab", "declarativeContent", "storage", "tabs", "http://aws.random.cat/meow", "https://dog.ceo/api/breeds/image/random"],
+  "permissions": ["activeTab", "declarativeContent", "storage", "tabs", "http://aws.random.cat/meow", "https://dog.ceo/api/breeds/image/random", "https://www.toggl.com/api/v8/time_entries"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
