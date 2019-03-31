@@ -12,32 +12,43 @@
 					display:flex;
 					justify-content: center;
 				}
-				.timer{
+				.timer, .toggl{
 					display:flex;
 					justify-content: center;
 					flex-direction: column;
 					text-align: center;
 				}
+				#error{
+					display: none;
+					color: red;
+				}
       </style>
     </head>
     <body>
-			<div class="timer">
-				<p id="title">Start working</p> 
-				<div id="goal_container">
-						<label ><b>Set goal</b></label> 
-						<input type="text" id="goal">
-						
-					</div>
-				<p id="timer_h">0</p>
-			</div>
-			<div class="goal">
-				
+			<div class="popup_container">
+				<div class="timer">
+					<p id="title">Start working</p> 
+					<div id="goal_container">
+							<label ><b>Set goal</b></label> 
+							<input placeholder = "ex: coding" type="text" id="goal">
+							
+						</div>
+					<p id="timer_h">0</p>
+				</div>
+				<div class="goal">
+					
 
-			</div>
-			<div class="btn-group">
-				<button id="start_btn">Start</button>
-				<button id="stop_btn">Stop</button>
-			</div>
+				</div>
+				<div class="btn-group">
+					<button id="start_btn">Start</button>
+					<button id="stop_btn">Stop</button>
+				</div>
+				<div class="toggl">
+					<a id="toggl_sync" href="#">toggl sync</a>
+					<p id="error">Cannot sync: <br> you have to login into toggl</p>
+				</div>
+		  </div>
+
 			<script src="popup.js"></script>
     </body>
   </html>

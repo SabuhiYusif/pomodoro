@@ -8,8 +8,9 @@ chrome.runtime.onInstalled.addListener(function() {
     let is_break = true;
     let break_time_count ;
     let count = 0;
+    let api_token;
 
-
+    
     chrome.runtime.onMessage.addListener(
 
         function(request, sender, sendResponse) {
@@ -29,6 +30,7 @@ chrome.runtime.onInstalled.addListener(function() {
             });
 
             console.log("REQUEST " + request.timer_state);
+            console.log("API TOKEN " + api_token);
 
             if (request.timer_state){
                 interval = setInterval(function () {
@@ -61,9 +63,6 @@ chrome.runtime.onInstalled.addListener(function() {
                         // Notify that we saved.
                         console.log("SAVED " + timer)
                     });
-
-                
-                    // display.textContent = minutes + ":" + seconds;
                     
                 }, 1000); 
             }else{

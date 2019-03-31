@@ -2,55 +2,25 @@ let timer_tag = document.getElementById("timer_h");
 let start_btn = document.getElementById("start_btn");
 let stop_btn = document.getElementById("stop_btn");
 let title = document.getElementById("title");
+let toggl_sync = document.getElementById("toggl_sync");
 let goal_container = document.getElementById("goal_container");
+let error = document.getElementById("error");
+
 let is_break = false;
 let is_working = false;
 let timer = 60;
 
 let is_timer_on = false;
-
-// var xhr = new XMLHttpRequest();
-// xhr.open("GET", "https://toggl.com/reports/api/v2/weekly?user_agent=yourname@domain.com&workspace_id=012345", false);
-// xhr.setRequestHeader('Authorization', 'Basic XXXXXX');
-// xhr.send();
-// document.write("Status code: " + xhr.status + " ");
-// document.write(xhr.statusText + "</br>");
-
-// dffdc920d5db30eb667568058da1a6c9
-var http = new XMLHttpRequest();
-var url = 'https://www.toggl.com/api/v8/time_entries/start';
-var params = '{"time_entry":{"description":"TEST JS 2","tags":["billed"],"duration":1200,"start":"2019-03-29T02:10:58.000Z","pid":150604542, "created_with":"curl"}}';
-http.open('POST', url, true);
-
-//Send the proper header information along with the request
-let encoded = btoa('dffdc920d5db30eb667568058da1a6c9:api_token')
-http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
-
-http.onreadystatechange = function() {//Call a function when the state changes.
-    if(http.readyState == 4 && http.status == 200) {
-        console.log(http.responseText);
-    }
-}
-http.send(params);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+let api_token;
+let toggl_timer_id;
+let duration;
+let sync = false;
 
 
 chrome.storage.local.get({'working': false}, function(result) {
 	if(result.working){
 		disableStartBtn();
+		hideTogglLink();
 		goal_container.style.display = "none";
 
 		if(document.getElementById("goal").value){
@@ -60,7 +30,7 @@ chrome.storage.local.get({'working': false}, function(result) {
 		}
 		
 	}else{
-
+		displayTogglLink();
 	}
 });
 
@@ -76,9 +46,14 @@ chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
 				timer_tag.textContent = minutes + ":" + seconds;
 			});
 
-
-
-
+chrome.storage.local.get({'sync': false}, function(result) {
+	sync = result.sync;
+	if(sync){
+		toggl_sync.textContent = "toggl_unsync";
+	}else{
+		toggl_sync.textContent = "toggl_sync";
+	}
+});
 
 chrome.storage.onChanged.addListener(function(changes, namespace) {
 
@@ -122,146 +97,138 @@ function startTimer(){
 
  }
 
+toggl_sync.onclick = function() {
+	console.log("HEY TOGGL");
+	if(!sync){
+		var http = new XMLHttpRequest();
+		http.open("GET", "https://www.toggl.com/api/v8/me", true);
+		http.responseType = 'json';
+		http.onreadystatechange = function () {
+				if(http.readyState === 4 && http.status === 200) {
+									error.style.display ="none";
+									api_token = http.response.data.api_token;
+									chrome.storage.local.set({'api_token': api_token}, function() {
 
+									});
+									sync = true
+									chrome.storage.local.set({'sync': sync}, function() {
+										
+									});
+									toggl_sync.textContent = "toggl_unsync";
+									console.log(sync)
+				}else{
+					error.style.display ="block";
+				}
+		};
+		http.send();
+		
+	}else{
+		sync = false
+		chrome.storage.local.set({'sync': sync}, function(result) {
+		});
+		toggl_sync.textContent = "toggl_sync";
+	}
+
+}
  
 stop_btn.onclick = function(element) {
 	enableStartBtn();
-	title.textContent = "Start working!"
+	displayTogglLink();
 	stopTimer();
+	title.textContent = "Start working!"
 	goal_container.style.display = "block";
 	chrome.storage.local.set({'working': false}, function(result) {
 				
 	});
+	chrome.storage.local.get({'sync': false}, function(result) {
+		sync = result.sync;
+	});
 
+	if(sync){
+
+		chrome.storage.local.get({'toggl_timer_id': 0}, function() {
+			toggl_timer_id = result.toggl_timer_id;
+		});
+		var http = new XMLHttpRequest();
+		var url = `https://www.toggl.com/api/v8/time_entries/${toggl_timer_id}/stop`;
+
+		// var params = `{"time_entry":{"description":"${desc}","tags":["billed"],"duration":1200,"start":"2019-03-29T02:10:58.000Z", "created_with":"curl"}}`;
+		http.open('PUT', url, true);
+
+		// let encoded = btoa('dffdc920d5db30eb667568058da1a6c9:api_token')
+		let encoded = btoa(api_token +':api_token');
+		http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
+
+		http.onreadystatechange = function() {
+				if(http.readyState == 4 && http.status == 200) {
+						console.log("STOP " + http.response);
+				}
+		}
+		
+		http.send();
+	}
 };
 
 
 start_btn.onclick = function() {
 		disableStartBtn()
-
-			
+		hideTogglLink();
 		startTimer();
+		chrome.storage.local.get({'api_token': api_token}, function(result) {
+			api_token = result.api_token;
+		});
+		chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
+			duration = result.pomodoro;
+		});
+		chrome.storage.local.get({'sync': false}, function(result) {
+			sync = result.sync;
+		});
+
+		let desc = "Stay focused!";
 	
 		goal_container.style.display = "none";
 
 		if(document.getElementById("goal").value){
-			title.textContent = "Goal: " + document.getElementById("goal").value;
+			desc = document.getElementById("goal").value;
+			title.textContent = "Goal: " + desc;
+			
 		}else{
-			title.textContent = "Stay focused!"
+			title.textContent = desc;
 		}
 
 		chrome.storage.local.set({'working': true}, function() {
 			
 		});
+
+		if(sync){
+			var http = new XMLHttpRequest();
+			var url = 'https://www.toggl.com/api/v8/time_entries/start';
+
+			var params = `{"time_entry":{"description":"${desc}","tags":["billed"],"duration":"${duration}","start":"2019-03-29T02:10:58.000Z", "created_with":"curl"}}`;
+			console.log("PARAMSS  " + params);
+			http.open('POST', url, true);
+
+			// let encoded = btoa('dffdc920d5db30eb667568058da1a6c9:api_token')
+			let encoded = btoa(api_token +':api_token');
+			http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
+			http.responseType = 'json';
+			http.onreadystatechange = function() {
+					if(http.readyState == 4 && http.status == 200) {
+							console.log(http.response);
+							toggl_timer_id = http.response.data.id;
+							chrome.storage.local.set({'toggl_timer_id': toggl_timer_id}, function() {
 			
+							});
+							console.log("TIMER ID  " + toggl_timer_id);
+
+					}
+			}
+			
+			http.send(params);
+	 }
 		
 	};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// chrome.storage.sync.get('color', function(data) {
-// 	changeColor.style.backgroundColor = data.color;
-// 	changeColor.setAttribute('value', data.color);
-// });
-// function countDown(){
-// 	counter++;
-// 	document.getElementById("timer_h").innerHTML = counter;
-// }
-
-// let interval;
-
-// function startTimer(duration, display) {
-// 		var timer = duration, minutes, seconds;
-		
-// 		minutes = parseInt(timer / 60, 10)
-// 		seconds = parseInt(timer % 60, 10);
-		
-// 		minutes = minutes < 10 ? "0" + minutes : minutes;
-// 		seconds = seconds < 10 ? "0" + seconds : seconds;
-
-// 		display.textContent = minutes + ":" + seconds;
-
-// 		if (--timer < 0) {
-// 				timer = duration;
-// 		}
-
-		// interval = setInterval(function () {
-		// 	chrome.storage.sync.set({'value': timer}, function() {
-		// 		// Notify that we saved.
-		// 		console.log("SAVED " + timer)
-		// 	});
-		// 	minutes = parseInt(timer / 60, 10)
-		// 	seconds = parseInt(timer % 60, 10);
-			
-		// 	minutes = minutes < 10 ? "0" + minutes : minutes;
-		// 	seconds = seconds < 10 ? "0" + seconds : seconds;
-		
-		// 	display.textContent = minutes + ":" + seconds;
-		
-		// 	if (--timer < 0) {
-		// 		enableStartBtn();
-		// 		if(is_break){
-		// 			afterBreak();
-		// 		}else{
-		// 			afterPomodoro();
-		// 		}
-					
-		// 	}
-		// }, 1000);
-	
-// }
-
-// function stopTimer() {
-// 	enableStartBtn();
-// 	clearInterval(interval);
-// 	timer_tag.textContent =  focus + ":" + "00"
-// }
-// function afterPomodoro() {
-// 	clearInterval(interval);
-// 	showBreakTimeScreen();
-// 	openPage();
-
-// }
-// function afterBreak() {
-// 	clearInterval(interval);
-// 	showPomodoroScreen();
-// }
-
-// function showPomodoroScreen() {
-// 	is_break = false;
-// 	title.innerHTML = "Break Time is Over <br> Back to work!";
-// 	timer_tag.textContent =  focus + ":" + "00";;
-// }
-
-// function showBreakTimeScreen() {
-// 	is_break = true;
-// 	title.textContent = "Time to take a break!";
-// 	timer_tag.textContent =  break_ + ":" + "00";
-// }
 
 function enableStartBtn() {
 	start_btn.disabled = false;
@@ -270,47 +237,10 @@ function enableStartBtn() {
 function disableStartBtn() {
 	start_btn.disabled = true;
 }
-// function openPage() {
-// 	// chrome.tabs.create({'url': chrome.extension.getURL('break.html')}, function(tab) {
-// 	// 	showBreakTimeScreen();
-// 	// 	console.log("TAB")
-// 	// });
-// }
 
-// start_btn.onclick = function(element) {
-// 	disableStartBtn()
-	
-// 	if(is_break){
-// 		count_breaks++;
-// 		if(count_breaks === 4){
-// 			startTimer(5 * 3, timer_tag);
-// 			count_breaks = 0;
-// 		}else{
-// 			startTimer(2, timer_tag);
-// 		}
-// 		title.textContent = "Get Away From Computer Screen!"
-// 	}else{
-		
-// 		chrome.storage.sync.get(['value'], function(result) {
-// 			timer = result.value;
-// 			console.log("DSADSD " + timer)
-// 			if(timer === 0){
-// 				startTimer(50, timer_tag);
-// 			}else{
-// 				startTimer(timer, timer_tag);
-// 			}
-
-// 		});
-	
-// 		title.textContent = "Stay focused!"
-// 	}
-
-// };
-
-// stop_btn.onclick = function(element) {
-// 	stop_btn.textContent = "Stop"
-// 	title.textContent = "Start working!"
-// 	stopTimer();
-// 	enableStartBtn()
-// };
-
+function hideTogglLink() {
+	toggl_sync.style.display = "none";
+}
+function displayTogglLink() {
+	toggl_sync.style.display = "block";
+}
