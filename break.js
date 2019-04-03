@@ -1,27 +1,24 @@
-let timer_tag = document.getElementById("timer_h");
-let img = document.getElementById("cat_img");
-let break_time = 60 * 5;
-let break_ = break_time / 60;
-
+let img = document.getElementById("dog_img");
+let url = "https://dog.ceo/api/breeds/image/random";
 let xhr = new XMLHttpRequest();
-	// xhr.onreadystatechange = handleStateChange; // Implemented elsewhere.
-xhr.open("GET", "https://dog.ceo/api/breeds/image/random", true);
-xhr.responseType = 'json';
-xhr.onreadystatechange = function () {
-	if(xhr.readyState === 4 && xhr.status === 200) {
-		img.src =xhr.response.message;
-	}
-};
-xhr.send();
+
+getDogImage(xhr);
 
 img.onclick = function(){
-	xhr.open("GET", "https://dog.ceo/api/breeds/image/random", true);
-	xhr.responseType = 'json';
-	xhr.onreadystatechange = function () {
-		if(xhr.readyState === 4 && xhr.status === 200) {
-			img.src =xhr.response.message;
+	getDogImage(xhr)
+}
+
+/**
+ * Gets new dog image in each call
+ * @param {XMLHttpRequest} http 
+ */
+function getDogImage(http){
+	http.open("GET", url, true);
+	http.responseType = 'json';
+	http.onreadystatechange = function () {
+		if(http.readyState === 4 && http.status === 200) {
+			img.src =http.response.message;
 		}
 	};
-	xhr.send();
-
+	http.send();
 }
