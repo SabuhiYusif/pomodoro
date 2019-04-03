@@ -6,14 +6,11 @@ let togglSync = document.getElementById("toggl_sync");
 let goalContainer = document.getElementById("goal_container");
 let error = document.getElementById("error");
 let goalInput = document.getElementById("goal");
-
 let timer;
 let apiToken;
 var togglTimerId;
 let duration;
 let sync = false;
-
-
 
 chrome.storage.local.get({'working': false}, function(result) {
 	if(result.working){
@@ -27,23 +24,11 @@ chrome.storage.local.get({'working': false}, function(result) {
 		}else{
 			changeTitleText("Stay focused!");
 		}
-		
 	}else{
 		displayTogglLink();
 		disableStoptBtn();
 	}
 });
-
-function changeTimerText(text){
-	timer = text;
-	minutes = parseInt(timer / 60, 10)
-	seconds = parseInt(timer % 60, 10);
-	
-	minutes = minutes < 10 ? "0" + minutes : minutes;
-	seconds = seconds < 10 ? "0" + seconds : seconds;
-
-	timerText.textContent = minutes + ":" + seconds;
-}
 
 chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
 			  changeTimerText(result.pomodoro);
@@ -59,75 +44,27 @@ chrome.storage.local.get({'sync': false}, function(result) {
 });
 
 chrome.storage.onChanged.addListener(function(changes, namespace) {
-
 	for (var key in changes) {
 		var storageChange = changes[key];
-		console.log('Storage key "%s" in namespace "%s" changed. ' +
-								'Old value was "%s", new value is "%s".',
-								key,
-								namespace,
-								storageChange.oldValue,
-								storageChange.newValue);
-
 			if(key == "pomodoro"){
-
 				changeTimerText(storageChange.newValue);
 			}
 	}
 });
 
-
-function stopTimer(){
-	chrome.runtime.sendMessage({timer_state: false}, function(response) {
-		// console.log(response.farewell);
-		return Promise.resolve("Dummy response to keep the console quiet");
-	});
-}
-
-function startTimer(){ 
-
-	chrome.runtime.sendMessage({timer_state: true}, function(response) {
-		console.log("Message sent");
-		return Promise.resolve("Dummy response to keep the console quiet");
-	});
-
- }
-
- togglSync.onclick = function() {
-	console.log("HEY TOGGL");
+togglSync.onclick = function() {
 	if(!sync){
 		var http = new XMLHttpRequest();
-		http.open("GET", "https://www.toggl.com/api/v8/me", true);
-		http.responseType = 'json';
-		http.onreadystatechange = function () {
-				if(http.readyState === 4 && http.status === 200) {
-									error.style.display ="none";
-									apiToken = http.response.data.api_token;
-									chrome.storage.local.set({'api_token': apiToken}, function() {
-
-									});
-									sync = true
-									chrome.storage.local.set({'sync': sync}, function() {
-										
-									});
-									togglSync.textContent = "toggl unsync";
-									console.log(sync)
-				}else{
-					error.style.display ="block";
-				}
-		};
-		http.send();
-		
+		syncToggl(http);		
 	}else{
 		sync = false
 		chrome.storage.local.set({'sync': sync}, function(result) {
 		});
 		togglSync.textContent = "toggl sync";
 	}
-
 }
  
-stopBtn.onclick = function(element) {
+stopBtn.onclick = function() {
 	enableStartBtn();
 	disableStoptBtn();
 	displayTogglLink();
@@ -142,36 +79,20 @@ stopBtn.onclick = function(element) {
 	});
 
 	if(sync){
-
+		var http = new XMLHttpRequest();
 		chrome.storage.local.get({'toggl_timer_id': 0}, function(result) {
 			togglTimerId = result.toggl_timer_id;
-			var http = new XMLHttpRequest();
-			console.log("After GET TIMER ID " +togglTimerId)
-			var url = `https://www.toggl.com/api/v8/time_entries/${togglTimerId}/stop`;
-	
-			http.open('PUT', url, true);
-	
-			let encoded = btoa(apiToken +':api_token');
-			http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
-	
-			http.onreadystatechange = function() {
-					if(http.readyState == 4 && http.status == 200) {
-							console.log("STOP " + http.response);
-					}
-			}
-			
-			http.send();
+			stopTogglTimer(http, togglTimerId);
 		});
-	
 	}
 };
-
 
 startBtn.onclick = function() {
 		disableStartBtn()
 		enableStopBtn()
 		hideTogglLink();
 		startTimer();
+		hideGoalContainer();
 		chrome.storage.local.get({'api_token': apiToken}, function(result) {
 			apiToken = result.api_token;
 		});
@@ -183,50 +104,92 @@ startBtn.onclick = function() {
 		});
 
 		let desc = "Stay focused!";
-	
-		hideGoalContainer();
-
 		if(goalInput.value){
 			desc = goalInput.value;
 			changeTitleText("Goal: " + desc);
-			
 		}else{
 			title.textContent = desc;
 		}
-
 		chrome.storage.local.set({'working': true}, function() {
-			
 		});
 
 		if(sync){
 			var http = new XMLHttpRequest();
+			startTogglTimeEntry(http, duration, desc);
+	 }
+};
+
+function startTogglTimeEntry(http, duration, desc){
 			var url = 'https://www.toggl.com/api/v8/time_entries/start';
-
 			var params = `{"time_entry":{"description":"${desc}","tags":["billed"],"duration":"${duration}","start":"2019-03-29T02:10:58.000Z", "created_with":"curl"}}`;
-			console.log("PARAMSS  " + params);
 			http.open('POST', url, true);
-
-			// let encoded = btoa('dffdc920d5db30eb667568058da1a6c9:api_token')
 			let encoded = btoa(apiToken +':api_token');
 			http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
 			http.responseType = 'json';
 			http.onreadystatechange = function() {
 					if(http.readyState == 4 && http.status == 200) {
-							console.log(http.response);
 							togglTimerId = http.response.data.id;
 							chrome.storage.local.set({'toggl_timer_id': togglTimerId}, function() {
-								console.log("TIMER ID  " + togglTimerId);
 							});
-							
-
 					}
 			}
-			
 			http.send(params);
-	 }
-		
-	};
+}
 
+function stopTogglTimer(http, togglTimerId){
+	var url = `https://www.toggl.com/api/v8/time_entries/${togglTimerId}/stop`;
+	http.open('PUT', url, true);
+	let encoded = btoa(apiToken +':api_token');
+	http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
+	http.onreadystatechange = function() {
+			if(http.readyState == 4 && http.status == 200) {
+			}
+	}
+	http.send();
+}
+
+function syncToggl(http){
+	http.open("GET", "https://www.toggl.com/api/v8/me", true);
+	http.responseType = 'json';
+	http.onreadystatechange = function () {
+			if(http.readyState === 4 && http.status === 200) {
+								error.style.display ="none";
+								apiToken = http.response.data.api_token;
+								chrome.storage.local.set({'api_token': apiToken}, function() {
+								});
+								sync = true
+								chrome.storage.local.set({'sync': sync}, function() {
+								});
+								togglSync.textContent = "toggl unsync";
+			}else{
+				error.style.display ="block";
+			}
+	};
+	http.send();
+}
+
+function stopTimer(){
+	chrome.runtime.sendMessage({timer_state: false}, function() {
+		return Promise.resolve("Dummy response to keep the console quiet");
+	});
+}
+
+function startTimer(){ 
+	chrome.runtime.sendMessage({timer_state: true}, function() {
+		return Promise.resolve("Dummy response to keep the console quiet");
+	});
+ }
+
+ function changeTimerText(text){
+	timer = text;
+	minutes = parseInt(timer / 60, 10)
+	seconds = parseInt(timer % 60, 10);
+	
+	minutes = minutes < 10 ? "0" + minutes : minutes;
+	seconds = seconds < 10 ? "0" + seconds : seconds;
+
+	timerText.textContent = minutes + ":" + seconds;
+}
 
 function enableStartBtn() {
 	startBtn.disabled = false;
