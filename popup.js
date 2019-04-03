@@ -34,16 +34,19 @@ chrome.storage.local.get({'working': false}, function(result) {
 	}
 });
 
-chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
-			 
-				timer = result.pomodoro ;
-				minutes = parseInt(timer / 60, 10)
-				seconds = parseInt(timer % 60, 10);
-				
-				minutes = minutes < 10 ? "0" + minutes : minutes;
-				seconds = seconds < 10 ? "0" + seconds : seconds;
+function changeTimerText(text){
+	timer = text;
+	minutes = parseInt(timer / 60, 10)
+	seconds = parseInt(timer % 60, 10);
+	
+	minutes = minutes < 10 ? "0" + minutes : minutes;
+	seconds = seconds < 10 ? "0" + seconds : seconds;
 
-				timerText.textContent = minutes + ":" + seconds;
+	timerText.textContent = minutes + ":" + seconds;
+}
+
+chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
+			  changeTimerText(result.pomodoro);
 			});
 
 chrome.storage.local.get({'sync': false}, function(result) {
@@ -67,14 +70,8 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 								storageChange.newValue);
 
 			if(key == "pomodoro"){
-				timer = storageChange.newValue;
-				minutes = parseInt(timer / 60, 10)
-				seconds = parseInt(timer % 60, 10);
-				
-				minutes = minutes < 10 ? "0" + minutes : minutes;
-				seconds = seconds < 10 ? "0" + seconds : seconds;
-			
-				timerText.textContent = minutes + ":" + seconds;
+
+				changeTimerText(storageChange.newValue);
 			}
 	}
 });
