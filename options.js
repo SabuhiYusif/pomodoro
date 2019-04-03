@@ -1,68 +1,71 @@
-let pomodor = document.getElementById('pomodoro');
 let btn = document.getElementById("change_btn");
-let pomodoro_selector;
-let short_break_time_selector;
-let long_break_time_selector;
-let pomodoros;
+pomodoroSelector = document.getElementById("pomodoro_selector");
+shortBreakTimeSelector = document.getElementById("short_break_time_selector");
+longBreakTimeSelector = document.getElementById("long_break_time_selector");
+pomodoros = document.getElementById("pomodoros");
 
-let timer = 20;
-let options_arr = ["pomodoro_selector", "short_break_time_selector", "long_break_time_selector", "pomodoros"]
-for(var i=0; i<options_arr.length; i++){
-	for(var j=1; j<=99; j++){
-		var select = document.getElementById(options_arr[i]);
-		var option = document.createElement("OPTION");
-		if(select.options !== null){
-			select.options.add(option);
-			option.text = j;
-			option.value = j;
-		}
-		
-		
-	}
-};
-chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
-	pomodoro_selector = document.getElementById("pomodoro_selector");
 
-	pomodoro_selector.value  = result.pomodoro;
-	
+let pomodoroSelectorValue;
+let shortBreakTimeSelectorValue;
+let longBreakTimeSelectorValue;
+let pomodorosValue;
+let defaultPomodoro = 25 * 60;
+let defaultShortBreak = 5 * 60;
+let defaultLongBreak = 15 * 60;
+let defaultNumberOfPomodoros = 4;
+
+let optionsArr = ["pomodoro_selector", "short_break_time_selector", "long_break_time_selector", "pomodoros"];
+
+fillSelectors(optionsArr);
+
+chrome.storage.local.get({'focus_time': defaultPomodoro}, function(result) {
+	pomodoroSelector.value  = (parseInt(result.focus_time) / 60);
 })
-chrome.storage.local.get({'short_br': 5 * 60}, function(result) {
-	short_break_time_selector = document.getElementById("short_break_time_selector");
-
-	short_break_time_selector.value  = result.short_br;
+chrome.storage.local.get({'short_br': defaultShortBreak}, function(result) {
+	shortBreakTimeSelector.value  = parseInt(result.short_br) / 60;
 })
 
-chrome.storage.local.get({'long_br': 15 * 60}, function(result) {
-	long_break_time_selector = document.getElementById("long_break_time_selector");
-
-	long_break_time_selector.value  = result.long_br;
+chrome.storage.local.get({'long_br': defaultLongBreak}, function(result) {
+	longBreakTimeSelector.value  = parseInt(result.long_br) / 60;
 })
-chrome.storage.local.get({'pomodoros': 4 * 60}, function(result) {
-	pomodoros = document.getElementById("pomodoros");
-
+chrome.storage.local.get({'pomodoros': defaultNumberOfPomodoros}, function(result) {
 	pomodoros.value  = result.pomodoros;
 })
 
+btn.onclick = function() {
+	pomodoroSelectorValue = pomodoroSelector.value;
+	shortBreakTimeSelectorValue = shortBreakTimeSelector.value;
+	longBreakTimeSelectorValue = longBreakTimeSelector.value;
+	pomodorosValue = pomodoros.value;	
 
-
-console.log("DSDAS");
-// let pomodoro_selector, short_break_time_selector, long_break_time_selector, pomodoros;
-btn.onclick = function(element) {
-	console.log("DSAD")
-	pomodoro_selector = document.getElementById("pomodoro_selector").value;
-	short_break_time_selector = document.getElementById("short_break_time_selector").value;
-	long_break_time_selector = document.getElementById("long_break_time_selector").value;
-	pomodoros = document.getElementById("pomodoros").value;	
-
-	// console.log(" " + pomodoro_selector +" "+ short_break_time_selector +" "+ long_break_time_selector +" "+ pomodoros + "  " );
-	chrome.storage.local.set({'pomodoro': pomodoro_selector * 60}, function() {
+	chrome.storage.local.set({'pomodoro': pomodoroSelectorValue * 60 }, function() {
 	})
-	chrome.storage.local.set({'short_br': short_break_time_selector  * 60}, function() {
+	chrome.storage.local.set({'short_br': shortBreakTimeSelectorValue * 60  }, function() {
 	})
-	chrome.storage.local.set({'long_br': long_break_time_selector  * 60}, function() {
+	chrome.storage.local.set({'long_br': longBreakTimeSelectorValue * 60  }, function() {
 	})
-	chrome.storage.local.set({'pomodoros': pomodoros  * 60}, function() {
+	chrome.storage.local.set({'pomodoros': pomodorosValue }, function() {
 	})
+	chrome.storage.local.set({'focus_time': pomodoroSelectorValue * 60}, function() {
+	});
 };
 
+
+/**
+ * Fills selectors with number from 1 to 90
+ * @param {arrayOfSelectorsId} arr 
+ */
+function fillSelectors(arr){
+	for(var i=0; i<arr.length; i++){
+		for(var j=1; j<=99; j++){
+			var select = document.getElementById(arr[i]);
+			var option = document.createElement("OPTION");
+			if(select.options !== null){
+				select.options.add(option);
+				option.text = j;
+				option.value = j;
+			}
+		}
+	};
+}
 

@@ -12,7 +12,7 @@
 					display:flex;
 					justify-content: center;
 				}
-				.timer, .toggl{
+				.timer_container, .toggl{
 					display:flex;
 					justify-content: center;
 					flex-direction: column;
@@ -26,18 +26,15 @@
     </head>
     <body>
 			<div class="popup_container">
-				<div class="timer">
+				<div class="timer_container">
 					<p id="title">Start working</p> 
 					<div id="goal_container">
 							<label ><b>Set goal</b></label> 
 							<input placeholder = "ex: coding" type="text" id="goal">
-							
 						</div>
-					<p id="timer_h">0</p>
+					<p id="timer"></p>
 				</div>
 				<div class="goal">
-					
-
 				</div>
 				<div class="btn-group">
 					<button id="start_btn">Start</button>

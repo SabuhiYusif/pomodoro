@@ -9,8 +9,11 @@ chrome.runtime.onInstalled.addListener(function() {
     let currentNumberOfBreakTimes = 0;
     let defaultPomodoro = 25 * 60;
     let defaultShortBreak = 5 * 60;
-    let defaultLongBreak = 5 * 60;
+    let defaultLongBreak = 15 * 60;
     let defaultNumberOfPomodoros = 4;
+
+    chrome.storage.local.set({'focus_time': defaultPomodoro}, function() {
+    });
 
     /** 
      * Listen message from popup.js and start timer when start button clicked in popup
@@ -21,18 +24,19 @@ chrome.runtime.onInstalled.addListener(function() {
             // If there is not setted params then use default values
             // If there is then assign them from resul.{paramName}
             chrome.storage.local.get({'pomodoro': defaultPomodoro}, function(result) {
-                timer = result.pomodoro
+                timer = result.pomodoro;
                 focusTime = timer;
             });
             chrome.storage.local.get({'short_br': defaultShortBreak}, function(result) {
-                breakTime = result.short_br
+                breakTime = result.short_br;
             });
             chrome.storage.local.get({'long_br': defaultLongBreak}, function(result) {
-                longBreakTime = result.long_br  
+                longBreakTime = result.long_br;
             });
             chrome.storage.local.get({'pomodoros': defaultNumberOfPomodoros}, function(result) {
                 totalNumberOfBreakTimes = result.pomodoros;
             });
+            
 
             // Decrease current pomodoro {timer} every 1 second
             if (request.timer_state){
@@ -74,8 +78,9 @@ chrome.runtime.onInstalled.addListener(function() {
     function stopTimer() {
         clearInterval(interval);
         chrome.storage.local.set({'pomodoro': focusTime}, function() {
+            timer = focusTime;
         });
-        timer = focusTime;
+        
     }
 
     /**
