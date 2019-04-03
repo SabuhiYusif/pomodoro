@@ -1,89 +1,89 @@
 chrome.runtime.onInstalled.addListener(function() {
-    
-    let timer ;
-    let focus = timer;
-    let break_time ;
-    let long_break_time ;
+    let timer;
+    let focusTime;
+    let breakTime;
+    let longBreakTime;
     let interval;
-    let is_break = true;
-    let break_time_count ;
-    let count = 0;
-    let api_token;
+    let isBreak = true;
+    let totalNumberOfBreakTimes;
+    let currentNumberOfBreakTimes = 0;
+    let defaultPomodoro = 25 * 60;
+    let defaultShortBreak = 5 * 60;
+    let defaultLongBreak = 5 * 60;
+    let defaultNumberOfPomodoros = 4;
 
-    
+    /** 
+     * Listen message from popup.js and start timer when start button clicked in popup
+    */
     chrome.runtime.onMessage.addListener(
-
         function(request, sender, sendResponse) {
 
-            chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
+            // If there is not setted params then use default values
+            // If there is then assign them from resul.{paramName}
+            chrome.storage.local.get({'pomodoro': defaultPomodoro}, function(result) {
                 timer = result.pomodoro
-                focus = timer;
+                focusTime = timer;
             });
-            chrome.storage.local.get({'short_br': 5 * 60}, function(result) {
-              break_time = result.short_br
+            chrome.storage.local.get({'short_br': defaultShortBreak}, function(result) {
+                breakTime = result.short_br
             });
-            chrome.storage.local.get({'long_br': 15 * 60}, function(result) {
-              long_break_time = result.long_br  
+            chrome.storage.local.get({'long_br': defaultLongBreak}, function(result) {
+                longBreakTime = result.long_br  
             });
-            chrome.storage.local.get({'pomodoros': 4}, function(result) {
-              break_time_count = result.pomodoros;
+            chrome.storage.local.get({'pomodoros': defaultNumberOfPomodoros}, function(result) {
+                totalNumberOfBreakTimes = result.pomodoros;
             });
 
-            console.log("REQUEST " + request.timer_state);
-            console.log("API TOKEN " + api_token);
-
+            // Decrease current pomodoro {timer} every 1 second
             if (request.timer_state){
                 interval = setInterval(function () {
                     timer--;
                     if (timer < 0) {
-                        
-                        if(is_break){
-                            openPage();
-                            count++;
 
-                            if(count == break_time_count ){
-                        
-                                timer = long_break_time;
-                                count = 0;
-                               
+                        // Check if it is a break time 
+                        if(isBreak){
+                            openNewPage();
+                            currentNumberOfBreakTimes++;
+                            if(currentNumberOfBreakTimes == totalNumberOfBreakTimes ){                        
+                                timer = longBreakTime;
+                                currentNumberOfBreakTimes = 0;
                             }else{
-                                timer = break_time;
+                                timer = breakTime;
                             }
-
-                            is_break = false;
+                            isBreak = false;
                         }else{
-                            timer = focus;
-                            is_break = true;
-                        }
-                            
+                            timer = focusTime;
+                            isBreak = true;
+                        }         
                     }
 
-
+                    // Set pomodoro to current {timer} value to notify popup.js for showing the time in popup window
                     chrome.storage.local.set({'pomodoro': timer}, function() {
-                        // Notify that we saved.
-                        console.log("SAVED " + timer)
                     });
                     
                 }, 1000); 
             }else{
-                    stopTimer();
-                    
-                }
+
+                stopTimer();    
+            }
         });
     
-
+    /**
+     * Stops setInterval method and assigns pomodoro {timer} back to {focusTime}
+     */
     function stopTimer() {
         clearInterval(interval);
-        chrome.storage.local.set({'pomodoro': focus}, function() {
-
+        chrome.storage.local.set({'pomodoro': focusTime}, function() {
         });
-        timer = focus;
+        timer = focusTime;
     }
-    function openPage() {
+
+    /**
+     * Opens new page(tab) when it is break time
+     */
+    function openNewPage() {
 
         chrome.tabs.create({'url': chrome.extension.getURL('break.html')}, function(tab) {
-    
-            console.log("TAB")
         });
     }
     

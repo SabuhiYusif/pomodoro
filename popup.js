@@ -12,7 +12,7 @@ let timer = 60;
 
 let is_timer_on = false;
 let api_token;
-let toggl_timer_id;
+var toggl_timer_id;
 let duration;
 let sync = false;
 
@@ -20,6 +20,7 @@ let sync = false;
 chrome.storage.local.get({'working': false}, function(result) {
 	if(result.working){
 		disableStartBtn();
+		enableStopBtn();
 		hideTogglLink();
 		goal_container.style.display = "none";
 
@@ -31,6 +32,7 @@ chrome.storage.local.get({'working': false}, function(result) {
 		
 	}else{
 		displayTogglLink();
+		disableStoptBtn();
 	}
 });
 
@@ -76,7 +78,6 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 			
 				timer_tag.textContent = minutes + ":" + seconds;
 			}
-
 	}
 });
 
@@ -133,6 +134,7 @@ toggl_sync.onclick = function() {
  
 stop_btn.onclick = function(element) {
 	enableStartBtn();
+	disableStoptBtn();
 	displayTogglLink();
 	stopTimer();
 	title.textContent = "Start working!"
@@ -146,32 +148,33 @@ stop_btn.onclick = function(element) {
 
 	if(sync){
 
-		chrome.storage.local.get({'toggl_timer_id': 0}, function() {
+		chrome.storage.local.get({'toggl_timer_id': 0}, function(result) {
 			toggl_timer_id = result.toggl_timer_id;
+			var http = new XMLHttpRequest();
+			console.log("After GET TIMER ID " +toggl_timer_id)
+			var url = `https://www.toggl.com/api/v8/time_entries/${toggl_timer_id}/stop`;
+	
+			http.open('PUT', url, true);
+	
+			let encoded = btoa(api_token +':api_token');
+			http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
+	
+			http.onreadystatechange = function() {
+					if(http.readyState == 4 && http.status == 200) {
+							console.log("STOP " + http.response);
+					}
+			}
+			
+			http.send();
 		});
-		var http = new XMLHttpRequest();
-		var url = `https://www.toggl.com/api/v8/time_entries/${toggl_timer_id}/stop`;
-
-		// var params = `{"time_entry":{"description":"${desc}","tags":["billed"],"duration":1200,"start":"2019-03-29T02:10:58.000Z", "created_with":"curl"}}`;
-		http.open('PUT', url, true);
-
-		// let encoded = btoa('dffdc920d5db30eb667568058da1a6c9:api_token')
-		let encoded = btoa(api_token +':api_token');
-		http.setRequestHeader('Authorization', encoded, 'Content-type', 'application/json');
-
-		http.onreadystatechange = function() {
-				if(http.readyState == 4 && http.status == 200) {
-						console.log("STOP " + http.response);
-				}
-		}
-		
-		http.send();
+	
 	}
 };
 
 
 start_btn.onclick = function() {
 		disableStartBtn()
+		enableStopBtn()
 		hideTogglLink();
 		startTimer();
 		chrome.storage.local.get({'api_token': api_token}, function(result) {
@@ -217,9 +220,9 @@ start_btn.onclick = function() {
 							console.log(http.response);
 							toggl_timer_id = http.response.data.id;
 							chrome.storage.local.set({'toggl_timer_id': toggl_timer_id}, function() {
-			
+								console.log("TIMER ID  " + toggl_timer_id);
 							});
-							console.log("TIMER ID  " + toggl_timer_id);
+							
 
 					}
 			}
@@ -237,7 +240,13 @@ function enableStartBtn() {
 function disableStartBtn() {
 	start_btn.disabled = true;
 }
+function enableStopBtn() {
+	stop_btn.disabled = false;
+}
 
+function disableStoptBtn() {
+	stop_btn	.disabled = true;
+}
 function hideTogglLink() {
 	toggl_sync.style.display = "none";
 }
