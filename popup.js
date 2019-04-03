@@ -58,7 +58,7 @@ togglSync.onclick = function() {
 		syncToggl(http);		
 	}else{
 		sync = false
-		chrome.storage.local.set({'sync': sync}, function(result) {
+		chrome.storage.local.set({'sync': sync}, function() {
 		});
 		togglSync.textContent = "toggl sync";
 	}
