@@ -1,5 +1,5 @@
 # Pomodoro
-Pomodoro Chrome Extension is a time management tool. It follows [Pomodoro technique](https://en.wikipedia.org/wiki/Pomodoro_Technique)
+Pomodoro is a chrome extension for time management. It follows [Pomodoro technique](https://en.wikipedia.org/wiki/Pomodoro_Technique)
 # Installation
 Download the zip folder unzip it. From Extension Management window in chrome click the “Load Unpacked” button and select your unzipped folder.
 # Options
