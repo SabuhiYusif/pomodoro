@@ -133,7 +133,7 @@ startBtn.onclick = function() {
 
 
 /**
- * Starts toggl timee
+ * Starts toggl timer
  * @param {XMLHttpRequest} http 
  * @param {number value} duration 
  * @param {string description} desc 
