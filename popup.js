@@ -13,11 +13,13 @@ let duration;
 let sync = false;
 
 chrome.storage.local.get({'working': false}, function(result) {
+	// If timer is in working state show relevant UI
 	if(result.working){
 		disableStartBtn();
 		enableStopBtn();
 		hideTogglLink();
 		hideGoalContainer();
+		// If goal specified then show it otherwise show default text
 		chrome.storage.local.get({'goal': ""}, function(result) {
 			if(result.goal){
 				changeTitleText("Goal: " + result.goal);
@@ -32,10 +34,12 @@ chrome.storage.local.get({'working': false}, function(result) {
 	}
 });
 
+// Update timer text according current pomodoro's value
 chrome.storage.local.get({'pomodoro': 25 * 60}, function(result) {
-			  changeTimerText(result.pomodoro);
-			});
+			  updateTimerText(result.pomodoro);
+});
 
+// Change toggl sync text according to whether it is synced or not
 chrome.storage.local.get({'sync': false}, function(result) {
 	sync = result.sync;
 	if(sync){
@@ -45,11 +49,12 @@ chrome.storage.local.get({'sync': false}, function(result) {
 	}
 });
 
+// Listen changes in timer from background
 chrome.storage.onChanged.addListener(function(changes, namespace) {
 	for (var key in changes) {
 		var storageChange = changes[key];
 			if(key == "pomodoro"){
-				changeTimerText(storageChange.newValue);
+				updateTimerText(storageChange.newValue);
 			}
 	}
 });
@@ -80,6 +85,7 @@ stopBtn.onclick = function() {
 		sync = result.sync;
 	});
 
+	// Stop timer in toggl
 	if(sync){
 		var http = new XMLHttpRequest();
 		chrome.storage.local.get({'toggl_timer_id': 0}, function(result) {
@@ -106,6 +112,8 @@ startBtn.onclick = function() {
 		});
 
 		let desc = "Stay focused!";
+		
+		// If goal is specified then show it otherwise show default text
 		if(goalInput.value){
 			desc = goalInput.value;
 			chrome.storage.local.set({'goal': desc}, function() {
@@ -123,6 +131,13 @@ startBtn.onclick = function() {
 	 }
 };
 
+
+/**
+ * Starts toggl timee
+ * @param {XMLHttpRequest} http 
+ * @param {number value} duration 
+ * @param {string description} desc 
+ */
 function startTogglTimeEntry(http, duration, desc){
 			var url = 'https://www.toggl.com/api/v8/time_entries/start';
 			var params = `{"time_entry":{"description":"${desc}","tags":["billed"],"duration":"${duration}","start":"2019-03-29T02:10:58.000Z", "created_with":"curl"}}`;
@@ -140,6 +155,11 @@ function startTogglTimeEntry(http, duration, desc){
 			http.send(params);
 }
 
+/**
+ * Stops toggl timer
+ * @param {XMLHttpRequest} http 
+ * @param {number value} togglTimerId 
+ */
 function stopTogglTimer(http, togglTimerId){
 	var url = `https://www.toggl.com/api/v8/time_entries/${togglTimerId}/stop`;
 	http.open('PUT', url, true);
@@ -152,6 +172,10 @@ function stopTogglTimer(http, togglTimerId){
 	http.send();
 }
 
+/**
+ * Syncs with toggl api
+ * @param {XMLHttpRequest} http 
+ */
 function syncToggl(http){
 	http.open("GET", "https://www.toggl.com/api/v8/me", true);
 	http.responseType = 'json';
@@ -172,19 +196,27 @@ function syncToggl(http){
 	http.send();
 }
 
+/**
+ * Sends message to background js to stop timer
+ */
 function stopTimer(){
 	chrome.runtime.sendMessage({timer_state: false}, function() {
-		return Promise.resolve("Dummy response to keep the console quiet");
 	});
 }
 
+/**
+ * Sends message to background js to start timer
+ */
 function startTimer(){ 
 	chrome.runtime.sendMessage({timer_state: true}, function() {
-		return Promise.resolve("Dummy response to keep the console quiet");
 	});
  }
 
- function changeTimerText(text){
+ /**
+	* Updates timer text
+	* @param {string} text 
+	*/
+ function updateTimerText(text){
 	timer = text;
 	minutes = parseInt(timer / 60, 10)
 	seconds = parseInt(timer % 60, 10);

@@ -67,9 +67,9 @@ chrome.runtime.onInstalled.addListener(function() {
                     
                 }, 1000); 
             }else{
-
                 stopTimer();    
             }
+            return;
         });
     
     /**
@@ -80,7 +80,8 @@ chrome.runtime.onInstalled.addListener(function() {
         chrome.storage.local.set({'pomodoro': focusTime}, function() {
             timer = focusTime;
         });
-        
+        chrome.storage.local.set({'goal': ""}, function() {
+        });  
     }
 
     /**
@@ -93,7 +94,3 @@ chrome.runtime.onInstalled.addListener(function() {
     }
     
 });
-
-
-
-
