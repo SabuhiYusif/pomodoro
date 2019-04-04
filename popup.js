@@ -18,12 +18,14 @@ chrome.storage.local.get({'working': false}, function(result) {
 		enableStopBtn();
 		hideTogglLink();
 		hideGoalContainer();
-
-		if(goalInput.value){
-			changeTitleText("Goal: " + goalInput.value);
-		}else{
-			changeTitleText("Stay focused!");
-		}
+		chrome.storage.local.get({'goal': ""}, function(result) {
+			if(result.goal){
+				changeTitleText("Goal: " + result.goal);
+			}else{
+				changeTitleText("Stay focused!");
+			}
+		});
+		
 	}else{
 		displayTogglLink();
 		disableStoptBtn();
@@ -106,6 +108,8 @@ startBtn.onclick = function() {
 		let desc = "Stay focused!";
 		if(goalInput.value){
 			desc = goalInput.value;
+			chrome.storage.local.set({'goal': desc}, function() {
+			});
 			changeTitleText("Goal: " + desc);
 		}else{
 			title.textContent = desc;
